@@ -23,11 +23,11 @@ requirements = [
     "networkx==2.5.1",
     "ruamel.yaml==0.17.21",
     "vivisect==1.0.8",
-    "smda==1.7.2",
+    "smda==1.7.4",
     "pefile==2022.5.30",
     "pyelftools==0.28",
     "dnfile==0.11.0",
-    "dncil==1.0.0",
+    "dncil==1.0.1",
     "pydantic==1.9.1",
 ]
 
@@ -76,7 +76,7 @@ setuptools.setup(
             "pycodestyle==2.8.0",
             "black==22.6.0",
             "isort==5.10.1",
-            "mypy==0.961",
+            "mypy==0.971",
             "psutil==5.9.1",
             "stix2==3.0.1",
             "requests==2.28.0",
@@ -87,7 +87,7 @@ setuptools.setup(
             "types-tabulate==0.8.9",
             "types-termcolor==1.1.4",
             "types-psutil==5.8.23",
-            "types_requests==2.28.1",
+            "types_requests==2.28.5",
         ],
         "build": [
             "pyinstaller==5.2",

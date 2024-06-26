@@ -8,10 +8,11 @@
 import sys
 import logging
 import datetime
+import contextlib
 from typing import Set, Dict, List, Optional
 from pathlib import Path
 
-import halo
+from rich.console import Console
 from typing_extensions import assert_never
 
 import capa.perf
@@ -154,6 +155,18 @@ def get_workspace(path: Path, input_format: str, sigpaths: List[Path]):
 
     viv_utils.flirt.register_flirt_signature_analyzers(vw, [str(s) for s in sigpaths])
 
+    with contextlib.suppress(Exception):
+        # unfortuately viv raises a raw Exception (not any subclass).
+        # This happens when the module isn't found, such as with a viv upgrade.
+        #
+        # Remove the symbolic switch case solver.
+        # This is only enabled for ELF files, not PE files.
+        # During the following performance investigation, this analysis module
+        # had some terrible worst-case behavior.
+        # We can put up with slightly worse CFG reconstruction in order to avoid this.
+        # https://github.com/mandiant/capa/issues/1989#issuecomment-1948022767
+        vw.delFuncAnalysisModule("vivisect.analysis.generic.symswitchcase")
+
     vw.analyze()
 
     logger.debug("%s", get_meta_str(vw))
@@ -176,6 +189,10 @@ def get_extractor(
       UnsupportedArchError
       UnsupportedOSError
     """
+
+    # stderr=True is used here to redirect the spinner banner to stderr, so that users can redirect capa's output.
+    console = Console(stderr=True, quiet=disable_progress)
+
     if backend == BACKEND_CAPE:
         import capa.features.extractors.cape.extractor
 
@@ -222,7 +239,7 @@ def get_extractor(
             if os_ == OS_AUTO and not is_supported_os(input_path):
                 raise UnsupportedOSError()
 
-        with halo.Halo(text="analyzing program", spinner="simpleDots", stream=sys.stderr, enabled=not disable_progress):
+        with console.status("analyzing program...", spinner="dots"):
             bv: BinaryView = binaryninja.load(str(input_path))
             if bv is None:
                 raise RuntimeError(f"Binary Ninja cannot open file {input_path}")
@@ -247,7 +264,7 @@ def get_extractor(
             if os_ == OS_AUTO and not is_supported_os(input_path):
                 raise UnsupportedOSError()
 
-        with halo.Halo(text="analyzing program", spinner="simpleDots", stream=sys.stderr, enabled=not disable_progress):
+        with console.status("analyzing program...", spinner="dots"):
             vw = get_workspace(input_path, input_format, sigpaths)
 
             if should_save_workspace:
